@@ -127,6 +127,36 @@ function unlockNext(key: string, s: number) {
     }
 }
 
+// ===== 게임 시작 전 설명 화면 (목표 + 스킬) =====
+// 작은 글씨는 한 줄에 22글자까지만!
+function showIntro(name: string, goal1: string, goal2: string, bCost: string) {
+    let intro = sprites.create(image.create(160, 120), SpriteKind.UI)
+    let im = intro.image
+    im.drawRect(2, 2, 156, 116, 1)
+    im.drawRect(4, 4, 152, 112, 12)
+    // 모드 이름 + 목표
+    im.printCenter(name, 8, 5)
+    im.printCenter(goal1, 19, 1, image.font5)
+    im.printCenter(goal2, 27, 9, image.font5)
+    im.drawLine(10, 35, 150, 35, 12)
+    // A 스킬: 대시
+    im.print("A", 10, 39, 5)
+    im.print("DASH", 22, 39, 9)
+    im.print("Invincible dash 0.25s", 22, 49, 1, image.font5)
+    im.print("Cooldown 5 sec", 22, 57, 1, image.font5)
+    // B 스킬: 페이드
+    im.print("B", 10, 66, 5)
+    im.print("FADE", 22, 66, 9)
+    im.print("Shadows safe 3 sec", 22, 76, 1, image.font5)
+    im.print("Cost: " + bCost, 22, 84, 1, image.font5)
+    im.drawLine(10, 94, 150, 94, 12)
+    im.printCenter("Press A to start", 101, 5)
+    // A 누를 때까지 기다리기
+    pauseUntil(() => controller.A.isPressed())
+    pauseUntil(() => !controller.A.isPressed())
+    intro.destroy()
+}
+
 // ===== 타임 어택 단계별 제한 시간 (1000 = 1초) =====
 let limits = [33000, 28000, 23000, 20000, 18000, 17000]
 
@@ -144,28 +174,39 @@ if (mode == 1) {
     stage = pickStage("taUnlocked", "TIME ATTACK")
     goal = 10
     labelText = "TIME S" + stage
-    game.splash("TIME ATTACK - STAGE " + stage, "10 coins in " + limits[stage - 1] / 1000 + " sec!")
+    showIntro("TIME ATTACK S" + stage,
+        "10 coins in " + limits[stage - 1] / 1000 + " sec!",
+        "Best: " + recText("taBest" + stage, " sec"),
+        "3 sec of time")
 } else if (mode == 2) {
     labelText = "ENDLESS"
-    game.splash("ENDLESS MODE", "Survive as long as you can!")
+    showIntro("ENDLESS",
+        "Stay alive & get coins",
+        "Best: " + recText("bestEndless", " coins"),
+        "3 coins")
 } else if (mode == 3) {
     stage = pickStage("unlocked", "COIN STAGE")
     goal = stage * 5
     ghostEvery = coinStageGhost[stage - 1]
     labelText = "COIN S" + stage
-    game.splash("COIN STAGE " + stage + ": " + goal + " coins!", "Coins escape in 5 sec!")
+    showIntro("COIN STAGE " + stage,
+        goal + " coins, escape in 5s",
+        "Best: " + recText("bestTime" + stage, " sec"),
+        "3 coins")
 } else if (mode == 4) {
     goal = 10
     ghostEvery = 8000
     labelText = "SPEED"
-    let bestText = "No record yet"
-    if (settings.exists("bestSpeed")) {
-        bestText = "Best " + settings.readNumber("bestSpeed") + " sec"
-    }
-    game.splash("SPEEDRUN: 10 coins!", bestText)
+    showIntro("SPEEDRUN",
+        "Get 10 coins fastest!",
+        "Best: " + recText("bestSpeed", " sec"),
+        "3 coins")
 } else {
     labelText = "RANDOM"
-    game.splash("RANDOM MODE", "Rules change every 10 sec!")
+    showIntro("RANDOM",
+        "Rules change every 10s",
+        "Best: " + recText("bestRandom", " coins"),
+        "3 coins")
 }
 info.setScore(0)
 let startTime = game.runtime()
